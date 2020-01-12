@@ -1,35 +1,50 @@
 {
-  "name": "passport-remember-me",
-  "version": "0.0.1",
+  "name": "passport-remember-me-session",
+  "version": "1.0.0",
   "description": "Remember Me cookie authentication strategy for Passport.",
-  "keywords": ["passport", "cookie", "persistent", "rememberme", "auth", "authn", "authentication"],
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jaredhanson/passport-remember-me.git"
-  },
-  "bugs": {
-    "url": "http://github.com/jaredhanson/passport-remember-me/issues"
-  },
-  "author": {
-    "name": "Jared Hanson",
-    "email": "jaredhanson@gmail.com",
-    "url": "http://www.jaredhanson.net/"
-  },
-  "licenses": [ {
-    "type": "MIT",
-    "url": "http://www.opensource.org/licenses/MIT" 
-  } ],
+  "keywords": [
+    "passport",
+    "cookie",
+    "persistent",
+    "rememberme",
+    "auth",
+    "authn",
+    "authentication"
+  ],
+  "repository": "JaneJeon/passport-remember-me",
+  "license": "MIT",
   "main": "./lib",
   "dependencies": {
-    "pkginfo": "0.2.x",
-    "passport": "~0.1.1"
+    "passport": "^0.4.0",
+    "pkginfo": "^0.4.1"
   },
   "devDependencies": {
-    "mocha": "1.x.x",
-    "chai": "1.x.x"
+    "chai": "^4.2.0",
+    "husky": "^4.0.7",
+    "lint-staged": "^9.5.0",
+    "mocha": "^7.0.0",
+    "prettier-standard": "^16.1.0"
   },
   "scripts": {
     "test": "NODE_PATH=./lib node_modules/.bin/mocha --reporter spec --require test/bootstrap/node test/*.test.js"
   },
-  "engines": { "node": ">= 0.4.0" }
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm test"
+    }
+  },
+  "lint-staged": {
+    "**/*": [
+      "prettier-standard --lint",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "engines": {
+    "node": ">= 0.4.0"
+  }
 }

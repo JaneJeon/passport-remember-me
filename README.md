@@ -1,10 +1,12 @@
-# Passport-Remember Me
+# Passport-Remember Me Session
+
+Extends the [passport-remember-me](https://github.com/jaredhanson/passport-remember-me) strategy to include support for getting rememberMe cookie from sessions (in case you use `cookie-session`) because previously you couldn't use this strategy without `cookie-parser`, which was decoding the cookie _twice_ if you were already using `cookie-session`. Also updates 7-year-old dependencies to modern versions.
 
 [Passport](http://passportjs.org/) strategy for authenticating based on a
 remember me cookie.
 
 This module lets you authenticate using a remember me cookie (aka persistent
-login) in your Node.js applications.  By plugging into Passport, remember me
+login) in your Node.js applications. By plugging into Passport, remember me
 authentication can be easily and unobtrusively integrated into any application
 or framework that supports [Connect](http://www.senchalabs.org/connect/)-style
 middleware, including [Express](http://expressjs.com/).
@@ -18,30 +20,40 @@ middleware, including [Express](http://expressjs.com/).
 #### Configure Strategy
 
 The remember me authentication strategy authenticates users using a token stored
-in a remember me cookie.  The strategy requires a `verify` callback, which
+in a remember me cookie. The strategy requires a `verify` callback, which
 consumes the token and calls `done` providing a user.
 
-The strategy also requires an `issue` callback, which issues a new token.  For
+The strategy also requires an `issue` callback, which issues a new token. For
 security reasons, remember me tokens should be invalidated after being used.
 The `issue` callback supplies a new token that will be stored in the cookie for
 next use.
 
-    passport.use(new RememberMeStrategy(
-      function(token, done) {
-        Token.consume(token, function (err, user) {
-          if (err) { return done(err); }
-          if (!user) { return done(null, false); }
-          return done(null, user);
-        });
-      },
-      function(user, done) {
-        var token = utils.generateToken(64);
-        Token.save(token, { userId: user.id }, function(err) {
-          if (err) { return done(err); }
-          return done(null, token);
-        });
-      }
-    ));
+```js
+passport.use(
+  new RememberMeStrategy(
+    function (token, done) {
+      Token.consume(token, function (err, user) {
+        if (err) {
+          return done(err)
+        }
+        if (!user) {
+          return done(null, false)
+        }
+        return done(null, user)
+      })
+    },
+    function (user, done) {
+      var token = utils.generateToken(64)
+      Token.save(token, { userId: user.id }, function (err) {
+        if (err) {
+          return done(err)
+        }
+        return done(null, token)
+      })
+    }
+  )
+)
+```
 
 #### Authenticate Requests
 
@@ -49,19 +61,20 @@ Use `passport.authenticate()`, specifying the `'remember-me'` strategy, to
 authenticate requests.
 
 This is typically used in an application's middleware stack, to log the user
-back in the next time they visit any page on your site.  For example:
+back in the next time they visit any page on your site. For example:
 
-    app.configure(function() {
-      app.use(express.cookieParser());
-      app.use(express.bodyParser());
-      app.use(express.session({ secret: 'keyboard cat' }));
-      app.use(passport.initialize());
-      app.use(passport.session());
-      app.use(passport.authenticate('remember-me'));
-      app.use(app.router);
-    });
-    
-Note that `passport.session()` should be mounted *above* `remember-me`
+```js
+app.configure(function () {
+  app.use(express.bodyParser())
+  app.use(require('cookie-session')({ secret: 'keyboard cat' }))
+  app.use(passport.initialize())
+  app.use(passport.session())
+  app.use(passport.authenticate('remember-me'))
+  app.use(require('./routes'))
+})
+```
+
+Note that `passport.session()` should be mounted _above_ `remember-me`
 authentication, so that tokens aren't exchanged for currently active login
 sessions.
 
@@ -70,22 +83,37 @@ sessions.
 If the user enables "remember me" mode, an initial cookie should be set when
 they login.
 
-    app.post('/login', 
-      passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),
-      function(req, res, next) {
-        // issue a remember me cookie if the option was checked
-        if (!req.body.remember_me) { return next(); }
-    
-        var token = utils.generateToken(64);
-        Token.save(token, { userId: req.user.id }, function(err) {
-          if (err) { return done(err); }
-          res.cookie('remember_me', token, { path: '/', httpOnly: true, maxAge: 604800000 }); // 7 days
-          return next();
-        });
-      },
-      function(req, res) {
-        res.redirect('/');
-      });
+```js
+app.post(
+  '/login',
+  passport.authenticate('local', {
+    failureRedirect: '/login',
+    failureFlash: true
+  }),
+  function (req, res, next) {
+    // issue a remember me cookie if the option was checked
+    if (!req.body.remember_me) {
+      return next()
+    }
+
+    var token = utils.generateToken(64)
+    Token.save(token, { userId: req.user.id }, function (err) {
+      if (err) {
+        return done(err)
+      }
+      res.cookie('remember_me', token, {
+        path: '/',
+        httpOnly: true,
+        maxAge: 604800000
+      }) // 7 days
+      return next()
+    })
+  },
+  function (req, res) {
+    res.redirect('/')
+  }
+)
+```
 
 #### Security Considerations
 
@@ -114,10 +142,12 @@ For a complete, working example, refer to the [login example](https://github.com
 
 ## Credits
 
-  - [Jared Hanson](http://github.com/jaredhanson)
+- [Jared Hanson](http://github.com/jaredhanson)
+- [Jane Jeon](https://github.com/JaneJeon)
 
 ## License
 
 [The MIT License](http://opensource.org/licenses/MIT)
 
 Copyright (c) 2013 Jared Hanson <[http://jaredhanson.net/](http://jaredhanson.net/)>
+Copyright (c) 2020 Jane Jeon <[http://janejeon.dev/](http://janejeon.dev/)>
